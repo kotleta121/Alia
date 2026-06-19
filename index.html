@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TagIt — найди бренд по фото</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .app {
+            max-width: 480px;
+            width: 100%;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            padding: 24px 20px 32px;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            padding: 0 4px;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 22px;
+            letter-spacing: -0.5px;
+            color: #1a2639;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .logo span {
+            background: #2b4f5e;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.3px;
+        }
+
+        .history-icon {
+            background: #f0f2f5;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #2b4f5e;
+            border: none;
+            font-size: 20px;
+        }
+
+        .history-icon:hover {
+            background: #e6e9ee;
+        }
+
+        .screen {
+            display: block;
+        }
+
+        .screen.hidden {
+            display: none;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .hero h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a2639;
+            line-height: 1.2;
+        }
+
+        .hero h1 .highlight {
+            color: #2b4f5e;
+        }
+
+        .hero p {
+            color: #5e6f7e;
+            margin-top: 8px;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .upload-area {
+            background: #f8faff;
+            border: 2px dashed #d0d9e4;
+            border-radius: 28px;
+            padding: 36px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.25s ease;
+            margin-bottom: 16px;
+        }
+
+        .upload-area:hover {
+            border-color: #2b4f5e;
+            background: #f2f6fd;
+        }
+
+        .upload-area svg {
+            width: 56px;
+            height: 56px;
+            color: #2b4f5e;
+            margin-bottom: 12px;
+            opacity: 0.8;
+        }
+
+        .upload-area .main-btn {
+            background: #2b4f5e;
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 17px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(43, 79, 94, 0.25);
+        }
+
+        .upload-area .main-btn:hover {
+            background: #1f3e4a;
+            transform: scale(1.02);
+        }
+
+        .upload-area .sub-text {
+            color: #7a8a9a;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+
+        .loading-container {
+            text-align: center;
+            padding: 40px 12px;
+        }
+
+        .pulse-icon {
+            width: 80px;
+            height: 80px;
+            background: #eef3f8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            animation: pulse 1.5s ease-in-out infinite;
+            color: #2b4f5e;
+            font-size: 36px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.08); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.6; }
+        }
+
+        .loading-container h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a2639;
+        }
+
+        .loading-container .loader-bar {
+            width: 200px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin: 16px auto 0;
+            overflow: hidden;
+        }
+
+        .loader-bar .fill {
+            height: 100%;
+            width: 0%;
+            background: #2b4f5e;
+            border-radius: 4px;
+            transition: width 0.1s;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 28px;
+            padding: 20px;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+            border: 1px solid #eef2f7;
+        }
+
+        .result-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .brand-badge {
+            background: #2b4f5e;
+            color: white;
+            font-weight: 700;
+            font-size: 22px;
+            padding: 6px 18px;
+            border-radius: 40px;
+            letter-spacing: -0.3px;
+        }
+
+        .confidence {
+            background: #eef3f8;
+            color: #2b4f5e;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 4px 14px;
+            border-radius: 40px;
+        }
+
+        .price-section {
+            background: #f8faff;
+            border-radius: 20px;
+            padding: 16px 18px;
+            margin: 16px 0 20px;
+            border-left: 4px solid #2b4f5e;
+        }
+
+        .price-section .label {
+            font-size: 13px;
+            color: #5e6f7e;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .price-section .price {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a2639;
+            margin-top: 4px;
+        }
+
+        .price-section .price small {
+            font-size: 18px;
+            font-weight: 400;
+            color: #5e6f7e;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: #2b4f5e;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 15px;
+            flex: 1;
+            min-width: 120px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        .btn-primary:hover {
+            background: #1f3e4a;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid #d0d9e4;
+            color: #1a2639;
+            padding: 12px 20px;
+            border-radius: 60px;
+            font-weight: 500;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-outline:hover {
+            background: #f0f2f5;
+            border-color: #b0c0ce;
+        }
+
+        .btn-secondary {
+            background: #eef3f8;
+            color: #1a2639;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 60px;
+            font-weight: 500;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .not-found {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .not-found h3 {
+            font-size: 20px;
+            color: #1a2639;
+        }
+
+        .not-found p {
+            color: #5e6f7e;
+            margin: 6px 0 18px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .history-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a2639;
+        }
+
+        .history-back {
+            background: #f0f2f5;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: #f8faff;
+            padding: 12px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid #eef2f7;
+        }
+
+        .history-item:hover {
+            background: #f0f4fe;
+            border-color: #d0d9e4;
+        }
+
+        .history-thumb {
+            width: 48px;
+            height: 48px;
+            background: #dce3ec;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #2b4f5e;
+            flex-shrink: 0;
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-info .brand {
+            font-weight: 600;
+            color: #1a2639;
+        }
+
+        .history-info .date {
+            font-size: 13px;
+            color: #7a8a9a;
+        }
+
+        .history-empty {
+            text-align: center;
+            color: #7a8a9a;
+            padding: 30px 0;
+        }
+
+        @media (max-width: 480px) {
+            .app { border-radius: 28px; padding: 20px 16px 24px; }
+            .hero h1 { font-size: 24px; }
+            .upload-area { padding: 24px 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app" id="app">
+    <div class="header">
+        <div class="logo">
+            TagIt <span>beta</span>
+        </div>
+        <button class="history-icon" id="historyBtn" aria-label="История">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+        </button>
+    </div>
+
+    <div id="mainScreen" class="screen">
+        <div class="hero">
+            <h1>Найди бренд по фото<br><span class="highlight">за 5 секунд</span></h1>
+            <p>Загрузи скриншот из Pinterest, TikTok или Instagram</p>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="4" ry="4"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <div>
+                <button class="main-btn" id="uploadBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    Загрузить фото
+                </button>
+            </div>
+            <div class="sub-text">или перетащи сюда</div>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 12px; font-size: 13px; color: #7a8a9a; margin-top: 8px;">
+            <span>Nike</span>
+            <span>Zara</span>
+            <span>Gucci</span>
+        </div>
+    </div>
+
+    <div id="loadingScreen" class="screen hidden">
+        <div class="loading-container">
+            <div class="pulse-icon">🔍</div>
+            <h3>Ищем бренд...</h3>
+            <div class="loader-bar">
+                <div class="fill" id="loaderFill"></div>
+            </div>
+            <p style="color: #7a8a9a; margin-top: 16px; font-size: 14px;">Анализируем логотип и силуэт</p>
+        </div>
+    </div>
+
+    <div id="resultScreen" class="screen hidden">
+        <div class="result-card" id="resultCard">
+        </div>
+    </div>
+
+    <div id="historyScreen" class="screen hidden">
+        <div class="history-header">
+            <h2>История</h2>
+            <button class="history-back" id="historyBackBtn">←</button>
+        </div>
+        <div id="historyList" class="history-list">
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const brandDB = [
+            { brand: 'Nike', price_min: 3000, price_max: 15000, currency: '₽', category: 'Спорт' },
+            { brand: 'Zara', price_min: 1500, price_max: 8000, currency: '₽', category: 'Масс-маркет' },
+            { brand: 'H&M', price_min: 1000, price_max: 5000, currency: '₽', category: 'Масс-маркет' },
+            { brand: 'Gucci', price_min: 25000, price_max: 150000, currency: '₽', category: 'Люкс' },
+            { brand: 'Hermès', price_min: 50000, price_max: 850000, currency: '₽', category: 'Люкс' },
+            { brand: 'Adidas', price_min: 2500, price_max: 12000, currency: '₽', category: 'Спорт' },
+            { brand: 'Prada', price_min: 30000, price_max: 180000, currency: '₽', category: 'Люкс' },
+            { brand: 'Balenciaga', price_min: 40000, price_max: 200000, currency: '₽', category: 'Люкс' },
+            { brand: 'Farfetch', price_min: 10000, price_max: 500000, currency: '₽', category: 'Люкс-ритейл' },
+            { brand: 'Louis Vuitton', price_min: 45000, price_max: 350000, currency: '₽', category: 'Люкс' },
+        ];
+
+        let history = [];
+        try {
+            const stored = localStorage.getItem('tagit_history');
+            if (stored) history = JSON.parse(stored);
+        } catch (e) { }
+
+        function saveHistory() {
+            try {
+                localStorage.setItem('tagit_history', JSON.stringify(history));
+            } catch (e) { }
+        }
+
+        const mainScreen = document.getElementById('mainScreen');
+        const loadingScreen = document.getElementById('loadingScreen');
+        const resultScreen = document.getElementById('resultScreen');
+        const historyScreen = document.getElementById('historyScreen');
+        const resultCard = document.getElementById('resultCard');
+        const historyList = document.getElementById('historyList');
+        const uploadArea = document.getElementById('uploadArea');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const historyBtn = document.getElementById('historyBtn');
+        const historyBackBtn = document.getElementById('historyBackBtn');
+        const loaderFill = document.getElementById('loaderFill');
+
+        function showScreen(screenId) {
+            [mainScreen, loadingScreen, resultScreen, historyScreen].forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(screenId);
+            if (target) target.classList.remove('hidden');
+        }
+
+        function mockRecognition() {
+            const brands = brandDB.map(b => b.brand);
+            if (Math.random() < 0.12) return null;
+            const randomBrand = brands[Math.floor(Math.random() * brands.length)];
+            return brandDB.find(b => b.brand === randomBrand) || null;
+        }
+
+        function formatPrice(min, max, currency) {
+            if (min && max) {
+                return `${min.toLocaleString()} – ${max.toLocaleString()} ${currency}`;
+            } else if (min) {
+                return `от ${min.toLocaleString()} ${currency}`;
+            }
+            return 'Цена по запросу';
+        }
+
+        function renderResult(brandData) {
+            if (!brandData) {
+                resultCard.innerHTML = `
+                    <div class="not-found">
+                        <div style="font-size: 48px; margin-bottom: 8px;">🔍</div>
+                        <h3>Бренд не определён</h3>
+                        <p>Попробуйте другое фото или поищите вручную</p>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+                            <button class="btn-primary" id="retryBtn">Новое фото</button>
+                            <button class="btn-outline" id="manualSearchBtn">Поиск по описанию</button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('retryBtn')?.addEventListener('click', () => showScreen('mainScreen'));
+                document.getElementById('manualSearchBtn')?.addEventListener('click', () => {
+                    alert('Поиск по описанию: введите название бренда или категорию (функция в разработке)');
+                });
+                return;
+            }
+
+            const confidence = Math.floor(72 + Math.random() * 25);
+            const priceStr = formatPrice(brandData.price_min, brandData.price_max, brandData.currency);
+
+            resultCard.innerHTML = `
+                <div class="result-brand">
+                    <span class="brand-badge">${brandData.brand}</span>
+                    <span class="confidence">${confidence}% уверенности</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                    <span style="color: #5e6f7e; font-size: 15px;">${brandData.category}</span>
+                </div>
+                <div class="price-section">
+                    <div class="label">Ориентировочная стоимость</div>
+                    <div class="price">${priceStr}</div>
+                </div>
+                <div class="result-actions">
+                    <button class="btn-primary" id="buyLinkBtn">Перейти в магазин</button>
+                    <button class="btn-outline" id="saveHistoryBtn">Сохранить</button>
+                    <button class="btn-secondary" id="newPhotoBtn">Другое фото</button>
+                </div>
+                <div style="margin-top: 14px; font-size: 13px; color: #7a8a9a; border-top: 1px solid #eef2f7; padding-top: 14px;">
+                    <span>Добавлено в историю: ${new Date().toLocaleString('ru-RU')}</span>
+                </div>
+            `;
+
+            document.getElementById('buyLinkBtn')?.addEventListener('click', () => {
+                const brand = brandData.brand;
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(brand + ' одежда купить')}`, '_blank');
+            });
+
+            document.getElementById('saveHistoryBtn')?.addEventListener('click', () => {
+                addToHistory(brandData, confidence);
+                alert('Сохранено в историю!');
+            });
+
+            document.getElementById('newPhotoBtn')?.addEventListener('click', () => showScreen('mainScreen'));
+
+            if (!resultCard.dataset.historySaved) {
+                addToHistory(brandData, confidence);
+                resultCard.dataset.historySaved = 'true';
+            }
+        }
+
+        function addToHistory(brandData, confidence) {
+            if (!brandData) return;
+            const entry = {
+                brand: brandData.brand,
+                category: brandData.category,
+                price_min: brandData.price_min,
+                price_max: brandData.price_max,
+                currency: brandData.currency,
+                confidence: confidence || 85,
+                date: new Date().toISOString(),
+                displayDate: new Date().toLocaleString('ru-RU', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+            };
+            const last = history[0];
+            if (last && last.brand === entry.brand) {
+                history[0] = entry;
+            } else {
+                history.unshift(entry);
+                if (history.length > 10) history.pop();
+            }
+            saveHistory();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            if (!historyList) return;
+            if (history.length === 0) {
+                historyList.innerHTML = `<div class="history-empty">История пуста. Найди свой первый бренд!</div>`;
+                return;
+            }
+            let html = '';
+            history.slice(0, 10).forEach((item, idx) => {
+                const priceStr = formatPrice(item.price_min, item.price_max, item.currency);
+                html += `
+                    <div class="history-item" data-index="${idx}">
+                        <div class="history-thumb">🖼</div>
+                        <div class="history-info">
+                            <div class="brand">${item.brand} <span style="font-weight: 400; color: #5e6f7e; font-size: 13px;">${item.confidence}%</span></div>
+                            <div class="date">${item.displayDate || 'недавно'} · ${priceStr}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            historyList.innerHTML = html;
+
+            document.querySelectorAll('.history-item').forEach(el => {
+                el.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    if (!isNaN(index) && history[index]) {
+                        const item = history[index];
+                        const brandData = brandDB.find(b => b.brand === item.brand) || {
+                            brand: item.brand,
+                            price_min: item.price_min,
+                            price_max: item.price_max,
+                            currency: item.currency || '₽',
+                            category: item.category || 'Бренд'
+                        };
+                        showScreen('resultScreen');
+                        renderResult(brandData);
+                    }
+                });
+            });
+        }
+
+        function startRecognition() {
+            showScreen('loadingScreen');
+            loaderFill.style.width = '0%';
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5 + Math.floor(Math.random() * 8);
+                if (progress > 100) progress = 100;
+                loaderFill.style.width = progress + '%';
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    const brandData = mockRecognition();
+                    showScreen('resultScreen');
+                    renderResult(brandData);
+                }
+            }, 120);
+        }
+
+        function triggerUpload() {
+            startRecognition();
+        }
+
+        uploadBtn.addEventListener('click', triggerUpload);
+        uploadArea.addEventListener('click', triggerUpload);
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#2b4f5e';
+            uploadArea.style.background = '#f0f6fe';
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#d0d9e4';
+            uploadArea.style.background = '#f8faff';
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#d0d9e4';
+            uploadArea.style.background = '#f8faff';
+            triggerUpload();
+        });
+
+        historyBtn.addEventListener('click', () => {
+            showScreen('historyScreen');
+            renderHistory();
+        });
+        historyBackBtn.addEventListener('click', () => {
+            showScreen('mainScreen');
+        });
+
+        showScreen('mainScreen');
+        renderHistory();
+    })();
+</script>
+</body>
+</html>
